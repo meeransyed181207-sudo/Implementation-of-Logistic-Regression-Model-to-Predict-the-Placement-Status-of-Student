@@ -22,58 +22,49 @@ RegisterNumber:  25008812
 */
 import pandas as pd
 import numpy as np
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-data = pd.read_csv(r"C:/Users/acer/Downloads/Placement_Data.csv")
-data.drop("sl_no", axis=1, inplace=True)
+data = pd.read_csv("C:/Users/acer/Downloads/Placement_Data.csv")
 
-data['status'] = data['status'].map({'Placed': 1, 'Not Placed': 0})
-data = pd.get_dummies(data, drop_first=True)
-X = data.drop('status', axis=1).values
-y = data['status'].values
+print(data.head())
+
+data.drop('sl_no', axis=1, inplace=True)
+
+data['salary'].fillna(0, inplace=True)
+le = LabelEncoder()
+categorical_columns = [
+    'gender', 'ssc_b', 'hsc_b', 'hsc_s',
+    'degree_t', 'workex', 'specialisation', 'status'
+]
+
+for col in categorical_columns:
+    data[col] = le.fit_transform(data[col])
+
+X = data.drop('status', axis=1)
+y = data['status']
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42
+    X, y, test_size=0.2, random_state=42
 )
-X_train = (X_train - X_train.mean(axis=0)) / X_train.std(axis=0)
-X_test  = (X_test  - X_test.mean(axis=0))  / X_test.std(axis=0)
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
 
-weights = np.zeros(X_train.shape[1])
-bias = 0
-learning_rate = 0.1      # increased
-epochs = 3000            # increased
+y_pred = model.predict(X_test)
 
-for _ in range(epochs):
-    linear = np.dot(X_train, weights) + bias
-    y_pred = sigmoid(linear)
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-    dw = (1 / len(y_train)) * np.dot(X_train.T, (y_pred - y_train))
-    db = (1 / len(y_train)) * np.sum(y_pred - y_train)
 
-    weights -= learning_rate * dw
-    bias -= learning_rate * db
-
-def predict(X):
-    linear = np.dot(X, weights) + bias
-    return np.where(sigmoid(linear) >= 0.5, 1, 0)
-
-y_predicted = predict(X_test)
-
-print("Accuracy:", accuracy_score(y_test, y_predicted) * 100, "%")
-
-print("\nConfusion Matrix:")
-print(confusion_matrix(y_test, y_predicted))
-
-print("\nClassification Report:")
-print(classification_report(y_test, y_predicted))
 ```
 
 ## Output:
-<img width="773" height="355" alt="image" src="https://github.com/user-attachments/assets/5b6e424e-768d-4628-846c-7b818e71f7d4" />
+<img width="755" height="295" alt="image" src="https://github.com/user-attachments/assets/682b5dee-0f8a-4a55-8ab3-cae4e2b3155a" />
+<img width="597" height="364" alt="image" src="https://github.com/user-attachments/assets/33292411-99f7-47ca-9018-90b5b93de518" />
 
 
 
